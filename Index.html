@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estrategia de Combinación de Cotizaciones</title>
+
+
+<style> 
+/* Variables para colores y estilos generales */
+:root {
+    --primary-color: #2a6dc1;
+    --secondary-color: #4caf50;
+    --accent-color: #ff6d00;
+    --text-color: #333;
+    --light-grey: #f5f5f5;
+    --border-color: #e0e0e0;
+    --highlight: #e3f2fd;
+    --warning: #fff8e1;
+    --success: #e8f5e9;
+    --info: #f3e5f5;
+    --section-padding: 25px;
+    --border-radius: 8px;
+    --box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Estilos generales */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+}
+
+/* Encabezado principal */
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 30px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efecto decorativo para el encabezado */
+header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+    z-index: 1;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2.2em;
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+header p {
+    margin-top: 10px;
+    font-size: 1.2em;
+    position: relative;
+    z-index: 2;
+}
+
+/* Encabezados */
+h2 {
+    color: var(--primary-color);
+    border-bottom: 3px solid var(--primary-color);
+    padding-bottom: 10px;
+    margin-top: 40px;
+    font-size: 1.8em;
+    position: relative;
+}
+
+/* Añadir iconos a los encabezados h2 para aspecto educativo */
+h2::before {
+    margin-right: 10px;
+    font-weight: normal;
+    opacity: 0.8;
+}
+
+h2:nth-of-type(1)::before { content: "📊 "; }
+h2:nth-of-type(2)::before { content: "💡 "; }
+h2:nth-of-type(3)::before { content: "🔍 "; }
+h2:nth-of-type(4)::before { content: "🔧 "; }
+h2:nth-of-type(5)::before { content: "⚙️ "; }
+h2:nth-of-type(6)::before { content: "🔄 "; }
+h2:nth-of-type(7)::before { content: "💰 "; }
+h2:nth-of-type(8)::before { content: "🛒 "; }
+h2:nth-of-type(9)::before { content: "📝 "; }
+
+h3 {
+    color: var(--primary-color);
+    margin-top: 25px;
+    font-size: 1.4em;
+    border-left: 4px solid var(--primary-color);
+    padding-left: 10px;
+}
+
+h4 {
+    color: var(--primary-color);
+    font-size: 1.2em;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+/* Contenedores de secciones */
+section {
+    background-color: white;
+    padding: var(--section-padding);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+/* Componentes del sistema */
+div {
+    margin-bottom: 20px;
+}
+
+.system-component, div:has(> h3) {
+    background-color: var(--light-grey);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    border-left: 5px solid var(--primary-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.system-component:hover, div:has(> h3):hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+/* Estilos para listas */
+ul, ol {
+    padding-left: 25px;
+}
+
+li {
+    margin-bottom: 10px;
+    position: relative;
+}
+
+ul li {
+    list-style-type: none;
+}
+
+ul li::before {
+    content: "•";
+    color: var(--primary-color);
+    font-weight: bold;
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+    font-size: 1.2em;
+}
+
+ol {
+    counter-reset: item;
+}
+
+ol li {
+    counter-increment: item;
+    list-style-type: none;
+}
+
+ol li::before {
+    content: counter(item) ".";
+    color: var(--primary-color);
+    font-weight: bold;
+    display: inline-block;
+    width: 1.5em;
+    margin-left: -1.5em;
+}
+
+/* Tablas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    border-radius: var(--border-radius);
+}
+
+thead {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+th, td {
+    border: 1px solid var(--border-color);
+    padding: 12px 15px;
+    text-align: left;
+}
+
+th {
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.9em;
+    letter-spacing: 0.5px;
+}
+
+tr:nth-child(even) {
+    background-color: var(--light-grey);
+}
+
+tr:hover {
+    background-color: var(--highlight);
+}
+
+
+
+/* Cajas para materiales y accesorios */
+div:has(> h4) {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: white;
+}
+
+/* Para que los encabezados h2 sean negros */
+h2 {
+    color: black !important; 
+}
+
+/* Para que los encabezados de tabla sean negros en lugar de blancos */
+th {
+    color: black !important;
+    background-color: #e0e0e0; /* Fondo gris claro para mejor contraste */
+}
+
+/* Alternativa simplificada */
+div:last-child {
+    background-color: var(--success);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin-top: 30px;
+    border-left: 5px solid var(--secondary-color);
+}
+
+div:last-child h3 {
+    color: var(--secondary-color);
+    border-left-color: var(--secondary-color);
+}
+
+/* Funcionamiento del sistema */
+div:has(> h3:contains("Con agua municipal")),
+div:has(> h3:contains("Sin agua municipal")),
+div:has(> h3:contains("El calentador solar")) {
+    background-color: var(--info);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin-top: 30px;
+    border-left: 5px solid #9c27b0;
+}
+
+/* Destacar mensajes de ahorro */
+div:has(> p:contains("Ahorro total")) {
+    background-color: var(--warning);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin: 20px 0;
+    border-left: 5px solid var(--accent-color);
+    font-weight: bold;
+}
+
+/* Estilos para diferentes tipos de bombas */
+div:has(> h3:contains("Bombas Hidroneumáticas")),
+div:has(> h3:contains("Bombas Presurizadoras")),
+div:has(> h3:contains("Bombas Periféricas")) {
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    margin-bottom: 25px;
+    border-top: 4px solid var(--accent-color);
+}
+
+/* Versión con flexbox en lugar de grid */
+.componentes-grid {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 20px -10px; /* Margen negativo horizontal para compensar el padding de las tarjetas */
+}
+
+.componente-card {
+    flex: 0 0 calc(33.333% - 20px); /* Un tercio del ancho menos el margen */
+    margin: 0 10px 20px 10px;
+    background-color: #e8f5e9; /* Fondo verde claro */
+    border-radius: 8px;
+    padding: 20px;
+    box-sizing: border-box;
+    min-height: 200px;
+    border-left: 4px solid #4caf50;
+}
+
+.componente-card h3 {
+    color: #2e7d32;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    position: relative;
+    padding-left: 15px;
+}
+
+.componente-card h3::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: #4caf50;
+}
+
+.componente-card p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Media query para dispositivos móviles */
+@media (max-width: 768px) {
+    .componente-card {
+        flex: 0 0 calc(100% - 20px); /* Ancho completo en móviles */
+    }
+}
+/* Estilos para tamaño de pantalla pequeño (responsive) */
+@media (max-width: 768px) {
+    body {
+        padding: 12px;
+    }
+    
+    header {
+        padding: 20px 15px;
+    }
+    
+    header h1 {
+        font-size: 1.8em;
+    }
+    
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    td, th {
+        padding: 10px;
+    }
+    
+    section {
+        padding: 15px;
+    }
+}
+
+/* Agregar decoraciones didácticas */
+section:nth-child(odd) {
+    border-top: 3px solid var(--primary-color);
+}
+
+section:nth-child(even) {
+    border-top: 3px solid var(--secondary-color);
+}
+
+/* Estilo para resaltar conceptos importantes */
+p strong, li strong {
+    background-color: #fff8dc;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+/* Añadir líneas de conexión visual entre secciones */
+section::after {
+    content: "";
+    display: block;
+    width: 4px;
+    height: 30px;
+    background-color: var(--primary-color);
+    margin: 0 auto;
+    margin-top: 20px;
+    opacity: 0.5;
+}
+
+section:last-child::after {
+    display: none;
+}
+
+/* Efecto de resaltado al pasar el cursor por encima de componentes importantes */
+.system-component:hover h3, div:has(> h3):hover h3 {
+    color: var(--accent-color);
+}
+
+
+/* Eliminar la línea vertical azul después de cada sección */
+section::after {
+    display: none !important;
+}
+
+</style> 
+
+
+
+</head>
+<body>
+    <header>
+        <h1>Estrategia de inversión para mejoramiento de sistema de agua para <strong>ELENA'S HIKING</strong></h1>
+    </header>
+
+    <section>
+        <h2>COMPARATIVA GENERAL DE OPCIONES</h2>
+        <table border="1" cellpadding="10" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th>Empresa</th>
+                    <th>Calentador (Q)</th>
+                    <th>Rotoplas (Q)</th>
+                    <th>Bomba (Q)</th>
+                    <th>Total Aprox. (Q)</th>
+                    <th>Garantía</th>
+                    <th>Comentarios relevantes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Solar City</td>
+                    <td>12,000</td>
+                    <td>3,050</td>
+                    <td>(No incluida)</td>
+                    <td>15,050</td>
+                    <td>9 años</td>
+                    <td>Incluye filtro + barra gratis. Instalación, visita técnica y tubería CPVC GRATIS. Tubos alemanes.</td>
+                </tr>
+                <tr>
+                    <td>Energica Solar</td>
+                    <td>10,800</td>
+                    <td>3,200</td>
+                    <td>1,700</td>
+                    <td>15,700</td>
+                    <td>9 años</td>
+                    <td>Incluye respaldo eléctrico (resistencia + termostato + panel). Instalación gratis.</td>
+                </tr>
+                <tr>
+                    <td>Imperial Solar</td>
+                    <td>11,000</td>
+                    <td>(No incluida)</td>
+                    <td>(No incluida)</td>
+                    <td>11,000</td>
+                    <td>5 años</td>
+                    <td>Buen material, pero garantía más corta. Sin bomba ni Rotoplas. Solo incluye instalación de agua caliente.</td>
+                </tr>
+              
+               
+                <tr>
+                    <td>Multiservicios TOCU</td>
+                    <td>11,297</td>
+                    <td>2,600</td>
+                    <td>Periférica + Hidroneumática 1/2HP</td>
+                    <td>22,531.25</td>
+                    <td>No especificada</td>
+                    <td>Accesorios completos, tubería, válvulas, instalación + panel eléctrico</td>
+                </tr>
+<tr>
+                    <td>Mayasersa</td>
+                    <td>-</td>
+                    <td>2,850</td>
+                    <td>TRUPER 3/4 HP (Q610)</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Mejor precio en Rotoplas y bomba periférica.</td>
+                </tr>
+                <tr>
+                    <td>Isselec</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>LITTLE GIANT 0.5hp (Q1,950)<br>THEBE 120w (Q675)</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>Especialistas en sistemas eléctricos e hidráulicos.</td>
+                </tr>
+                
+                           </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>CONCEPTO DE LA ESTRATEGIA</h2>
+        <p>Esta estrategia consiste en seleccionar los mejores componentes de diferentes proveedores para lograr un sistema óptimo al mejor precio posible. En lugar de adquirir todo el paquete de un solo proveedor, seleccionamos las mejores ofertas individuales para cada componente necesario.</p>
+    </section>
+
+    <section>
+        <h2>COMBINACIÓN ÓPTIMA DE PROVEEDORES</h2>
+        
+        <div>
+            <h3>1. SISTEMA DE CALENTADOR SOLAR</h3>
+            <p><strong>Mejor opción: Solar City - Q12,000</strong></p>
+            <ul>
+                <li>Calentador solar presurizado de 360 litros (95 galones)</li>
+                <li>9 años de garantía (la más extensa del mercado)</li>
+                <li>Incluye filtro y barra de magnesio GRATIS</li>
+                <li>Componentes de alta calidad (acero inoxidable, serpentín de bronce)</li>
+                <li>Instalación gratuita incluida</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h3>2. TANQUE ROTOPLAS</h3>
+            <p><strong>Mejor opción: Mayasersa - Q2,850</strong></p>
+            <ul>
+                <li>Depósito Rotoplas de 2,500 litros</li>
+                <li>Es la opción más económica entre todas las cotizaciones</li>
+                <li>Entrega inmediata</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h3>3. SISTEMA DE BOMBEO</h3>
+            <p><strong>Mejor opción: Compra separada de bombas</strong></p>
+            <ul>
+                <li><strong>Bomba hidroneumática</strong>: LITTLE GIANT 0.5hp de Isselec - Q1,950</li>
+                <li><strong>Bomba presurizada de respaldo</strong>: THEBE 120w de Isselec - Q675</li>
+            </ul>
+            <p><strong>Total sistema de bombeo</strong>: Q2,625</p>
+        </div>
+    </section>
+
+    <section>
+    <h2>GUÍA DE COMPONENTES DEL SISTEMA</h2>
+    
+    <div class="componentes-grid">
+        <div class="componente-card">
+            <h3>Rotoplas tricapa 2,500 L</h3>
+            <p>Depósito principal para almacenamiento de agua ubicado a un nivel bajo. La capacidad de 2,500 litros permite autonomía durante cortes de suministro.</p>
+        </div>
+        
+        <div class="componente-card">
+            <h3>Bomba presurizadora + sensor de nivel</h3>
+            <p>Impulsa el agua desde el Rotoplas hacia toda la casa, garantizando presión adecuada. El sensor de nivel impide que la bomba funcione si el nivel de agua es insuficiente, protegiéndola de daños.</p>
+        </div>
+        
+        <div class="componente-card">
+            <h3>Válvula de retención (check)</h3>
+            <p>Dispositivo mecánico que permite el flujo de agua en una sola dirección. Evita que el agua del Rotoplas regrese a la red principal o viceversa, manteniendo la integridad del sistema.</p>
+        </div>
+        
+        <div class="componente-card">
+            <h3>Flotador tipo boya mecánico</h3>
+            <p>Mecanismo instalado en el Rotoplas que controla automáticamente el llenado desde la red principal. Cuando el nivel baja, permite la entrada de agua y cuando está lleno, cierra el paso.</p>
+        </div>
+        
+        <div class="componente-card">
+            <h3>Filtro de sedimentos</h3>
+            <p>Instalado antes de la bomba y el calentador, retiene partículas e impurezas que podrían dañar los equipos o reducir su eficiencia. Requiere mantenimiento periódico.</p>
+        </div>
+        
+        <div class="componente-card">
+            <h3>Válvula check adicional (salida)</h3>
+            <p>Colocada en la línea de salida, asegura que no haya retorno desde la casa hacia la red principal, protegiendo la calidad del agua en todo el sistema.</p>
+        </div>
+        
+        <div class="componente-card">
+            <h3>Tubería CPVC/PVC</h3>
+            <p>Las tuberías CPVC se utilizan para agua caliente y fría por su resistencia a temperaturas elevadas, mientras que el PVC estándar se usa para las alimentaciones de agua fría.</p>
+        </div>
+        
+        <div class="componente-card">
+            <h3>Llaves de paso (PVC/CPVC)</h3>
+            <p>Instaladas en puntos estratégicos para controlar el flujo de agua en cada sección (red, bomba, calentador, ducha), permitiendo aislar zonas para mantenimiento sin afectar todo el sistema.</p>
+        </div>
+        
+        <div class="componente-card">
+            <h3>Regulador o presostato (opcional)</h3>
+            <p>Dispositivo que controla la presión de la bomba, especialmente útil si ésta es muy alta, protegiendo las tuberías y accesorios de posibles daños por sobrepresión.</p>
+        </div>
+    </div>
+</section>
+
+    <section>
+        <h2>ANÁLISIS DE TIPOS DE BOMBAS</h2>
+        
+        <p>Seleccionar la bomba adecuada es crucial para el funcionamiento óptimo de tu sistema. A continuación se explican los diferentes tipos y sus aplicaciones:</p>
+        
+        <div>
+            <h3>Bombas Hidroneumáticas</h3>
+            <p><strong>Ejemplo:</strong> LITTLE GIANT 0.5hp 120v (Q1,950 - Isselec)</p>
+            <p><strong>Función:</strong> Mantienen la presión constante en todo el sistema hidráulico de la casa.</p>
+            <p><strong>Características:</strong></p>
+            <ul>
+                <li>Mayor potencia (0.5 HP = 1/2 caballo)</li>
+                <li>Incluyen tanque presurizado que actúa como amortiguador</li>
+                <li>Sistema automático de encendido/apagado según demanda</li>
+                <li>Diseñadas para manejar el suministro de agua para toda la vivienda</li>
+                <li>Ideal cuando el Rotoplas está en la parte baja de la propiedad</li>
+            </ul>
+            <p><strong>Ideal para:</strong> Sistemas completos donde necesitas garantizar presión en toda la casa desde un depósito en nivel bajo.</p>
+        </div>
+        
+        <div>
+            <h3>Bombas Presurizadoras</h3>
+            <p><strong>Ejemplo:</strong> THEBE 120w 120v (Q675 - Isselec)</p>
+            <p><strong>Función:</strong> Aumentan la presión en puntos específicos del sistema, como la salida del calentador solar.</p>
+            <p><strong>Características:</strong></p>
+            <ul>
+                <li>Menos potentes que las hidroneumáticas</li>
+                <li>Más compactas y económicas</li>
+                <li>Menor consumo eléctrico</li>
+                <li>Instalación más sencilla</li>
+                <li>Diseñadas para aplicaciones específicas</li>
+            </ul>
+            <p><strong>Ideal para:</strong> Complementar una bomba principal o resolver problemas de presión localizados, especialmente en el circuito del calentador solar.</p>
+        </div>
+        
+        <div>
+            <h3>Bombas Periféricas</h3>
+            <p><strong>Ejemplo:</strong> TRUPER 3/4 HP 110V (Q610 - Mayasersa)</p>
+            <p><strong>Función:</strong> Similar a las hidroneumáticas pero con diferente diseño; impulsan agua a distancias moderadas.</p>
+            <p><strong>Características:</strong></p>
+            <ul>
+                <li>Buena relación potencia/precio (3/4 HP)</li>
+                <li>Adecuadas para sistemas residenciales</li>
+                <li>Pueden requerir la instalación adicional de un tanque hidroneumático</li>
+                <li>Más económicas que las hidroneumáticas completas</li>
+            </ul>
+            <p><strong>Ideal para:</strong> Presupuestos más ajustados donde se puede complementar con un tanque hidroneumático por separado.</p>
+        </div>
+        
+        <h3>Protección para tu bomba</h3>
+        <p>Para garantizar la durabilidad de la bomba y la seguridad del sistema, es esencial instalar protecciones adecuadas:</p>
+        
+        <div>
+            <h4>Protecciones recomendadas</h4>
+            <ul>
+                <li><strong>Interruptor de flotador (float switch):</strong> Se instala dentro del tanque Rotoplas y corta la energía a la bomba cuando el nivel de agua baja de cierto punto. Costo aproximado: Q200-350.</li>
+                <li><strong>Válvula check (anti-retorno):</strong> En la salida de la bomba para evitar retorno de agua.</li>
+                <li><strong>Válvula de pie:</strong> En la entrada de succión (dentro del Rotoplas) para mantener el cebado.</li>
+                <li><strong>Filtro de entrada:</strong> Para proteger la bomba de sedimentos.</li>
+                <li><strong>Manómetro de presión:</strong> Para monitoreo visual del sistema.</li>
+                <li><strong>Conexiones flexibles:</strong> En entrada y salida para reducir vibraciones.</li>
+            </ul>
+        </div>
+        
+        <div>
+            <p>Costos aproximados para estas protecciones:</p>
+            <ul>
+                <li><strong>Sistema básico</strong> (flotador + válvula check + válvula de pie): Q400-600</li>
+                <li><strong>Sistema intermedio</strong> (añadiendo presostato y conexiones flexibles): Q700-900</li>
+                <li><strong>Sistema completo</strong> con protecciones electrónicas: Q1,000-1,500</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2>FUNCIONAMIENTO DEL SISTEMA COMPLETO</h2>
+        
+        <div>
+            <h3>1. Con agua municipal disponible:</h3>
+            <ul>
+                <li>El agua entra desde la red municipal, pasando por la válvula de retención.</li>
+                <li>El flotador controla el llenado del Rotoplas de manera automática.</li>
+                <li>Simultáneamente, el agua alimenta la casa directamente a través de la red paralela.</li>
+                <li>La válvula de retención en la línea principal evita que el agua retorne al Rotoplas o a la red pública.</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h3>2. Sin agua municipal:</h3>
+            <ul>
+                <li>La bomba hidroneumática se activa automáticamente al abrir cualquier grifo.</li>
+                <li>Extrae agua del Rotoplas y la impulsa hacia toda la instalación.</li>
+                <li>La válvula de retención en la línea principal <strong>impide que tu agua se vaya con los vecinos</strong>.</li>
+                <li>Todo el sistema queda alimentado exclusivamente por el agua almacenada en el Rotoplas.</li>
+                <li>El sensor de nivel en el Rotoplas <strong>apaga la bomba</strong> si el nivel de agua es insuficiente, protegiendo el equipo.</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h3>3. El calentador solar:</h3>
+            <ul>
+                <li>Se conecta en paralelo a la salida de la bomba presurizadora.</li>
+                <li>Alimenta exclusivamente la ducha con agua caliente.</li>
+                <li>La entrada al calentador debe contar con su propia llave de paso y filtro para facilitar el mantenimiento.</li>
+                <li>Utiliza tuberías CPVC que soportan temperaturas elevadas.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
+        <h2>PRESUPUESTO TOTAL DE LA COMBINACIÓN ÓPTIMA</h2>
+        
+        <table border="1" cellpadding="10" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th>Componente</th>
+                    <th>Proveedor</th>
+                    <th>Precio (Q)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Calentador solar 360L</td>
+                    <td>Solar City</td>
+                    <td>12,000</td>
+                </tr>
+                <tr>
+                    <td>Tanque Rotoplas 2,500L</td>
+                    <td>Mayasersa</td>
+                    <td>2,850</td>
+                </tr>
+                <tr>
+                    <td>Bomba hidroneumática 1/2HP</td>
+                    <td>Isselec</td>
+                    <td>1,950</td>
+                </tr>
+                <tr>
+                    <td>Bomba presurizadora (opcional)</td>
+                    <td>Isselec</td>
+                    <td>675</td>
+                </tr>
+                <tr>
+                    <td>Protecciones para bombas</td>
+                    <td>Ferretería</td>
+                    <td>~800</td>
+                </tr>
+                <tr>
+                    <td>Tuberías y conexiones</td>
+                    <td>Ferretería</td>
+                    <td>~800</td>
+                </tr>
+                <tr>
+                    <td>Material eléctrico</td>
+                    <td>Ferretería</td>
+                    <td>~400</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>TOTAL APROXIMADO</strong></td>
+                    <td><strong>19,475</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div>
+            <p><strong>Ahorro total: Aproximadamente Q3,056 comparado con Multiservicios TOCU (Q22,531.25)</strong></p>
+        </div>
+    </section>
+
+    <section>
+        <h2>MATERIALES Y ACCESORIOS ADICIONALES</h2>
+        <p>Para completar tu sistema de manera eficiente y segura, necesitarás adquirir estos componentes en una ferretería:</p>
+        
+        <div>
+            <h4>1. Protección para bombas</h4>
+            <ul>
+                <li>Interruptor de flotador para tanque: ~Q250</li>
+                <li>Válvula check (anti-retorno): ~Q150-200</li>
+                <li>Válvula de pie (para succión): ~Q100-150</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h4>2. Conectores y tuberías</h4>
+            <ul>
+                <li>Tubería CPVC para agua caliente: ~Q300-400</li>
+                <li>Tubería PVC para agua fría: ~Q200-300</li>
+                <li>Conectores, codos, tees: ~Q200-300</li>
+                <li>Adaptadores macho/hembra: ~Q100</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h4>3. Material eléctrico</h4>
+            <ul>
+                <li>Cable THHN para bombas: ~Q200-300</li>
+                <li>Tablero eléctrico pequeño: ~Q150-200</li>
+                <li>Interruptor termomagnético (flipón): ~Q75-100</li>
+            </ul>
+        </div>
+        
+        <p><strong>Subtotal materiales adicionales</strong>: Aproximadamente Q1,725-2,000</p>
+    </section>
+
+    <section>
+        <h2>RECOMENDACIONES PARA IMPLEMENTAR ESTA ESTRATEGIA</h2>
+        
+        <h3>1. Coordinación de instalaciones</h3>
+        <ol>
+            <li>Primero instalar el Rotoplas</li>
+            <li>Luego el calentador solar</li>
+            <li>Finalmente el sistema de bombeo</li>
+        </ol>
+        
+        <h3>2. Consideraciones para la instalación</h3>
+        <ul>
+            <li>Verificar que Solar City coordine con Isselec para la instalación de bombas</li>
+            <li>O contratar un plomero independiente para conectar todo el sistema (Q1,000-1,500)</li>
+        </ul>
+        
+        <h3>3. Garantías</h3>
+        <ul>
+            <li>Solicitar garantías por escrito de cada componente</li>
+            <li>Definir claramente responsabilidades en caso de fallas</li>
+        </ul>
+        
+        <h3>4. Ventajas de esta estrategia</h3>
+        <ul>
+            <li>Obtienes el mejor calentador solar con la mejor garantía (9 años)</li>
+            <li>Sistema de bombeo profesional con doble protección</li>
+            <li>Control total sobre los accesorios adicionales</li>
+            <li>Ahorro significativo</li>
+        </ul>
+        
+        <h3>5. Aspectos a tener en cuenta</h3>
+        <ul>
+            <li>Necesitarás coordinar entre diferentes proveedores</li>
+            <li>Posiblemente requieras asesoría técnica para la interconexión</li>
+        </ul>
+        
+        <div>
+            <h3>ALTERNATIVA SIMPLIFICADA</h3>
+            <p>Si prefieres una opción con menos proveedores, considera:</p>
+            <ul>
+                <li>Calentador solar y tanque: Solar City (Q15,050)</li>
+                <li>Bombas: Isselec (Q2,625)</li>
+                <li>Protecciones y accesorios: ~Q2,000</li>
+                <li><strong>Total: Q19,675</strong></li>
+            </ul>
+            <p>Esta opción te da la ventaja de tener solo dos proveedores principales, simplificando la coordinación de la instalación.</p>
+        </div>
+    </section>
+</body>
+</html>
